@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול עוסק פטור - פיננסי</title>
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --bg: #f4f6f8;
+            --surface: #ffffff;
+            --text: #212529;
+            --text-secondary: #6c757d;
+            --danger: #e53935;
+            --border: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar / Drawer Navigation */
+        .sidebar {
+            width: 260px;
+            background: var(--primary);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.25rem;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .nav-list {
+            list-style: none;
+            margin-top: 15px;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: 500;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--primary-dark);
+        }
+
+        /* Main Content Area */
+        .content {
+            flex-grow: 1;
+            padding: 24px 32px;
+            overflow-y: auto;
+        }
+
+        .section-header {
+            margin-bottom: 24px;
+        }
+
+        .section-header h1 {
+            font-size: 1.6rem;
+            color: #2e3842;
+        }
+
+        /* Metric Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .metric-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .metric-card .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .progress-container {
+            margin-top: 10px;
+            background: #e9ecef;
+            border-radius: 8px;
+            height: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: var(--primary);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* Form Card */
+        .card {
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        input, select {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        /* Data Tables */
+        .table-container {
+            background: var(--surface);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+        }
+
+        th, td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: #fafbfc;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        td {
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-income { background: #e8f5e9; color: #2e7d32; }
+        .badge-expense { background: #ffebee; color: #c62828; }
+
+        .view-section {
+            display: none;
+        }
+        .view-section.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; padding: 12px 0; }
+            .nav-list { display: flex; overflow-x: auto; margin-top: 5px; }
+            .nav-item { padding: 8px 14px; white-space: nowrap; }
+            .content { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- תפריט צידי בהשראת האפליקציה שצירפת -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>עוסק פטור - ניהול</h2>
+            <p>בלי ניירות ובלי כאב ראש</p>
+        </div>
+        <ul class="nav-list">
+            <li class="nav-item active" onclick="switchTab('dashboard')">📊 ראשי</li>
+            <li class="nav-item" onclick="switchTab('add-doc')">➕ העלאת מסמך</li>
+            <li class="nav-item" onclick="switchTab('docs-list')">🧾 רשימת מסמכים</li>
+            <li class="nav-item" onclick="switchTab('pnl')">📑 דו"ח רווח והפסד</li>
+            <li class="nav-item" onclick="switchTab('pricing')">💳 מחירון שירותים</li>
+        </ul>
+    </nav>
+
+    <!-- תוכן מרכזי -->
+    <main class="content">
+
+        <!-- מסך ראשי / Dashboard -->
+        <section id="dashboard" class="view-section active">
+            <div class="section-header">
+                <h1>לוח בקרה פיננסי לשנת 2026</h1>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>סך הכנסות (קבלות)</h3>
+                    <div class="value" id="total-income">₪0</div>
+                    <small>מחזור עסקאות מצטבר</small>
+                </div>
+                <div class="metric-card">
+                    <h3>תקרת עוסק פטור (2026)</h3>
+                    <div class="value" id="remaining-limit">₪120,000</div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="limit-progress"></div>
+                    </div>
+                    <small id="limit-percent" style="margin-top: 4px; display: block;">0% נוצל מהתקרה</small>
+                </div>
+                <div class="metric-card">
+                    <h3>סך הוצאות מוכרות</h3>
+                    <div class="value" id="total-expenses" style="color: var(--danger);">₪0</div>
+                    <small>חומרים, דלק, ציוד ועוד</small>
+                </div>
+                <div class="metric-card">
+                    <h3>רווח נקי לצורכי מס</h3>
+                    <div class="value" id="net-profit" style="color: var(--primary);">₪0</div>
+                    <small>הכנסות פחות הוצאות מוכרות</small>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>פעולות מהירות</h3>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn" onclick="switchTab('add-doc')">הוסף מסמך חדש</button>
+                    <button class="btn btn-outline" onclick="exportToCSV()">ייצוא נתונים לאקסל (CSV)</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- מסך העלאת / הוספת מסמך -->
+        <section id="add-doc" class="view-section">
+            <div class="section-header">
+                <h1>העלאת ותיעוד מסמך</h1>
+            </div>
+            <div class="card">
+                <form id="doc-form" onsubmit="saveDocument(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>סוג מסמך</label>
+                            <select id="doc-type" required onchange="updateCategories()">
+                                <option value="income">הכנסה (קבלה על תשלום)</option>
+                                <option value="expense">הוצאה מוכרת (חשבונית מס)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>תאריך</label>
+                            <input type="date" id="doc-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>סכום בש"ח</label>
+                            <input type="number" id="doc-amount" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                        <div class="form-group">
+                            <label>שם לקוח / ספק</label>
+                            <input type="text" id="doc-entity" placeholder="שם הלקוח או שם בית העסק" required>
+                        </div>
+                        <div class="form-group">
+                            <label>קטגוריה</label>
+                            <select id="doc-category" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>תיאור העבודה / מוצר</label>
+                            <input type="text" id="doc-desc" placeholder="התקנת שקע כוח, רכישת חומרים...">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">שמור מסמך למערכת</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- מסך רשימת מסמכים -->
+        <section id="docs-list" class="view-section">
+            <div class="section-header">
+                <h1>רשימת מסמכים ותנועות</h1>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>תאריך</th>
+                            <th>סוג</th>
+                            <th>לקוח / ספק</th>
+                            <th>קטגוריה</th>
+                            <th>תיאור</th>
+                            <th>סכום</th>
+                            <th>פעולה</th>
+                        </tr>
+                    </thead>
+                    <tbody id="docs-table-body">
+                        <!-- יוזן דינמית -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- מסך דו"ח רווח והפסד -->
+        <section id="pnl" class="view-section">
+            <div class="section-header">
+                <h1>דו"ח רווח והפסד לשנת המס</h1>
+            </div>
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border);">
+                    <strong>סך כל מחזור העסקאות (הכנסות):</strong>
+                    <span id="pnl-income">₪0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); color: var(--danger);">
+                    <strong>סך כל ההוצאות המוכרות:</strong>
+                    <span id="pnl-expenses">₪0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 16px 0; font-size: 1.2rem; font-weight: bold;">
+                    <strong>רווח נקי מעסק עצמאי:</strong>
+                    <span id="pnl-net">₪0</span>
+                </div>
+                <small style="color: var(--text-secondary);">* לצורך חישוב המס השנתי, רווח נקי זה יתווסף להכנסותיך מטופס ה-106 של שנת 2026.</small>
+            </div>
+        </section>
+
+        <!-- מסך מחירון שירותים -->
+        <section id="pricing" class="view-section">
+            <div class="section-header">
+                <h1>מחירון שירותים מהיר</h1>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>שם השירות / עבודה</th>
+                            <th>מחיר מומלץ (ש"ח)</th>
+                            <th>הערות</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>ביקור / בדיקת תשתית ראשונית</td><td>250 - 350</td><td>מתקזז בביצוע העבודה</td></tr>
+                        <tr><td>החלפת לוח חשמל ביתי (חד-פאזי)</td><td>1,500 - 2,500</td><td>כולל מאמ"תים וממסר פחת תקני</td></tr>
+                        <tr><td>התקנת עמדת טעינה לרכב חשמלי</td><td>1,200 - 2,200</td><td>תלוי במרחק מהלוח ובתשתית</td></tr>
+                        <tr><td>הוספת נקודת מאור / שקע כוח</td><td>300 - 450</td><td>כולל חיווט וחציבה בסיסית</td></tr>
+                        <tr><td>החלפת גוף חימום ותרמוסטט בדוד</td><td>450 - 650</td><td>כולל פלאנג' וניקוי אבנית</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const ANNUAL_LIMIT = 120000;
+        let documents = JSON.parse(localStorage.getItem('biz_docs') || '[]');
+
+        const categories = {
+            income: ['עבודות חשמל', 'עבודות אחזקה והנדימן', 'ייעוץ ובדיקות', 'אחר'],
+            expense: ['ציוד וחומרי חשמל', 'כלי עבודה', 'רכב ודלק', 'ביטוחים ורישיונות', 'שיווק ופרסום', 'טלפון ותקשורת', 'שונות']
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            const navIndex = ['dashboard', 'add-doc', 'docs-list', 'pnl', 'pricing'].indexOf(tabId);
+            if (navIndex !== -1) {
+                document.querySelectorAll('.nav-item')[navIndex].classList.add('active');
+            }
+
+            if (tabId === 'dashboard' || tabId === 'pnl') renderMetrics();
+            if (tabId === 'docs-list') renderDocsTable();
+        }
+
+        function updateCategories() {
+            const type = document.getElementById('doc-type').value;
+            const catSelect = document.getElementById('doc-category');
+            catSelect.innerHTML = categories[type].map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function saveDocument(e) {
+            e.preventDefault();
+            const doc = {
+                id: Date.now(),
+                type: document.getElementById('doc-type').value,
+                date: document.getElementById('doc-date').value,
+                amount: parseFloat(document.getElementById('doc-amount').value),
+                entity: document.getElementById('doc-entity').value,
+                category: document.getElementById('doc-category').value,
+                desc: document.getElementById('doc-desc').value
+            };
+
+            documents.push(doc);
+            localStorage.setItem('biz_docs', JSON.stringify(documents));
+            alert('המסמך נשמר בהצלחה!');
+            document.getElementById('doc-form').reset();
+            setDefaultDate();
+            updateCategories();
+            switchTab('dashboard');
+        }
+
+        function deleteDoc(id) {
+            if (confirm('למחוק מסמך זה?')) {
+                documents = documents.filter(d => d.id !== id);
+                localStorage.setItem('biz_docs', JSON.stringify(documents));
+                renderDocsTable();
+                renderMetrics();
+            }
+        }
+
+        function renderMetrics() {
+            const income = documents.filter(d => d.type === 'income').reduce((acc, d) => acc + d.amount, 0);
+            const expenses = documents.filter(d => d.type === 'expense').reduce((acc, d) => acc + d.amount, 0);
+            const net = income - expenses;
+            const remaining = Math.max(0, ANNUAL_LIMIT - income);
+            const percent = Math.min(100, Math.round((income / ANNUAL_LIMIT) * 100));
+
+            document.getElementById('total-income').textContent = '₪' + income.toLocaleString();
+            document.getElementById('total-expenses').textContent = '₪' + expenses.toLocaleString();
+            document.getElementById('net-profit').textContent = '₪' + net.toLocaleString();
+            document.getElementById('remaining-limit').textContent = '₪' + remaining.toLocaleString();
+            document.getElementById('limit-progress').style.width = percent + '%';
+            document.getElementById('limit-percent').textContent = percent + '% נוצל מהתקרה';
+
+            document.getElementById('pnl-income').textContent = '₪' + income.toLocaleString();
+            document.getElementById('pnl-expenses').textContent = '₪' + expenses.toLocaleString();
+            document.getElementById('pnl-net').textContent = '₪' + net.toLocaleString();
+        }
+
+        function renderDocsTable() {
+            const tbody = document.getElementById('docs-table-body');
+            tbody.innerHTML = '';
+            
+            // מיון לפי תאריך יורד
+            const sorted = [...documents].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if (sorted.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">אין מסמכים מתועדים עדיין.</td></tr>';
+                return;
+            }
+
+            sorted.forEach(d => {
+                const tr = document.createElement('tr');
+                const isIncome = d.type === 'income';
+                tr.innerHTML = `
+                    <td>${d.date}</td>
+                    <td><span class="badge ${isIncome ? 'badge-income' : 'badge-expense'}">${isIncome ? 'קבלה' : 'חשבונית הוצאה'}</span></td>
+                    <td>${d.entity}</td>
+                    <td>${d.category}</td>
+                    <td>${d.desc || '-'}</td>
+                    <td style="font-weight: 600; color: ${isIncome ? 'var(--primary)' : 'var(--danger)'}">₪${d.amount.toLocaleString()}</td>
+                    <td><button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="deleteDoc(${d.id})">מחק</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function exportToCSV() {
+            if (documents.length === 0) {
+                alert('אין נתונים לייצוא');
+                return;
+            }
+            let csvContent = "\uFEFFתאריך,סוג,לקוח/ספק,קטגוריה,תיאור,סכום\n";
+            documents.forEach(d => {
+                const typeName = d.type === 'income' ? 'הכנסה' : 'הוצאה';
+                csvContent += `"${d.date}","${typeName}","${d.entity}","${d.category}","${d.desc || ''}","${d.amount}"\n`;
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `דוח_עוסק_פטור_2026.csv`;
+            a.click();
+        }
+
+        function setDefaultDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('doc-date').value = today;
+        }
+
+        // אתחול
+        setDefaultDate();
+        updateCategories();
+        renderMetrics();
+    </script>
+</body>
+</html>
