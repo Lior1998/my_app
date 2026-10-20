@@ -3,334 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ניהול עוסק פטור - פיננסי</title>
+    <title>מערכת פיננסית - עוסק פטור</title>
+    <!-- ספרייה להפקת PDF בעברית ישירות מהדפדפן -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
-            --primary: #4CAF50;
-            --primary-dark: #388E3C;
-            --bg: #f4f6f8;
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --bg: #f8fafc;
             --surface: #ffffff;
-            --text: #212529;
-            --text-secondary: #6c757d;
-            --danger: #e53935;
-            --border: #e0e0e0;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --danger: #dc2626;
         }
 
-        * {
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            display: flex;
-            min-height: 100vh;
-        }
+        .sidebar { width: 250px; background: var(--primary); color: #fff; padding: 20px 0; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 0 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.2); text-align: center; }
+        .nav-list { list-style: none; margin-top: 15px; }
+        .nav-item { padding: 12px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+        .nav-item:hover, .nav-item.active { background-color: var(--primary-dark); }
 
-        /* Sidebar / Drawer Navigation */
-        .sidebar {
-            width: 260px;
-            background: var(--primary);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            padding: 20px 0;
-            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
-        }
+        .content { flex-grow: 1; padding: 24px; overflow-y: auto; }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
 
-        .sidebar-header {
-            padding: 0 20px 20px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            text-align: center;
-        }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .metric-card { background: var(--surface); padding: 16px; border-radius: 8px; border: 1px solid var(--border); }
+        .metric-card h3 { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; }
+        .metric-card .value { font-size: 1.5rem; font-weight: bold; }
 
-        .sidebar-header h2 {
-            font-size: 1.25rem;
-            margin-bottom: 4px;
-        }
+        .card { background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        label { font-size: 0.85rem; font-weight: 600; color: #334155; }
+        input, select, textarea { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
+        
+        .btn { background: var(--primary); color: #fff; padding: 9px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn:hover { opacity: 0.9; }
+        .btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
 
-        .sidebar-header p {
-            font-size: 0.85rem;
-            opacity: 0.9;
-        }
+        table { width: 100%; border-collapse: collapse; text-align: right; }
+        th, td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        th { background: #f1f5f9; color: var(--text-secondary); }
 
-        .nav-list {
-            list-style: none;
-            margin-top: 15px;
-            flex-grow: 1;
+        /* תבנית מסמך PDF */
+        #invoice-preview-container { display: none; }
+        .invoice-box {
+            background: #fff; width: 680px; margin: 0 auto; padding: 32px; border: 1px solid #ccc;
+            direction: rtl; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-
-        .nav-item {
-            padding: 14px 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-weight: 500;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            background-color: var(--primary-dark);
-        }
-
-        /* Main Content Area */
-        .content {
-            flex-grow: 1;
-            padding: 24px 32px;
-            overflow-y: auto;
-        }
-
-        .section-header {
-            margin-bottom: 24px;
-        }
-
-        .section-header h1 {
-            font-size: 1.6rem;
-            color: #2e3842;
-        }
-
-        /* Metric Cards */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .metric-card {
-            background: var(--surface);
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-
-        .metric-card h3 {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-
-        .metric-card .value {
-            font-size: 1.6rem;
-            font-weight: 700;
-        }
-
-        .progress-container {
-            margin-top: 10px;
-            background: #e9ecef;
-            border-radius: 8px;
-            height: 10px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            background: var(--primary);
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s;
-        }
-
-        /* Form Card */
-        .card {
-            background: var(--surface);
-            padding: 24px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            margin-bottom: 24px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #495057;
-        }
-
-        input, select {
-            padding: 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.95rem;
-            outline: none;
-        }
-
-        input:focus, select:focus {
-            border-color: var(--primary);
-        }
-
-        .btn {
-            background: var(--primary);
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: opacity 0.2s;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: var(--primary);
-            border: 1px solid var(--primary);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-        }
-
-        /* Data Tables */
-        .table-container {
-            background: var(--surface);
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: right;
-        }
-
-        th, td {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        th {
-            background-color: #fafbfc;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        td {
-            font-size: 0.9rem;
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .badge-income { background: #e8f5e9; color: #2e7d32; }
-        .badge-expense { background: #ffebee; color: #c62828; }
-
-        .view-section {
-            display: none;
-        }
-        .view-section.active {
-            display: block;
-        }
+        .invoice-header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--primary); padding-bottom: 12px; margin-bottom: 20px; }
+        .invoice-details { margin-bottom: 20px; line-height: 1.6; }
+        .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .invoice-table th, .invoice-table td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+        .invoice-total { text-align: left; font-size: 1.15rem; font-weight: bold; margin-top: 15px; }
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            .sidebar { width: 100%; padding: 12px 0; }
-            .nav-list { display: flex; overflow-x: auto; margin-top: 5px; }
-            .nav-item { padding: 8px 14px; white-space: nowrap; }
-            .content { padding: 16px; }
+            .sidebar { width: 100%; }
+            .nav-list { display: flex; overflow-x: auto; }
+            .nav-item { white-space: nowrap; }
+            .invoice-box { width: 100%; }
         }
     </style>
 </head>
 <body>
 
-    <!-- תפריט צידי בהשראת האפליקציה שצירפת -->
     <nav class="sidebar">
         <div class="sidebar-header">
-            <h2>עוסק פטור - ניהול</h2>
-            <p>בלי ניירות ובלי כאב ראש</p>
+            <h3>עוסק פטור - ניהול</h3>
         </div>
         <ul class="nav-list">
             <li class="nav-item active" onclick="switchTab('dashboard')">📊 ראשי</li>
             <li class="nav-item" onclick="switchTab('add-doc')">➕ העלאת מסמך</li>
+            <li class="nav-item" onclick="switchTab('generate-pdf')">📄 הפקת מסמך (PDF)</li>
             <li class="nav-item" onclick="switchTab('docs-list')">🧾 רשימת מסמכים</li>
-            <li class="nav-item" onclick="switchTab('pnl')">📑 דו"ח רווח והפסד</li>
-            <li class="nav-item" onclick="switchTab('pricing')">💳 מחירון שירותים</li>
+            <li class="nav-item" onclick="switchTab('settings')">⚙️ הגדרות ענן</li>
         </ul>
     </nav>
 
-    <!-- תוכן מרכזי -->
     <main class="content">
 
-        <!-- מסך ראשי / Dashboard -->
+        <!-- לוח בקרה -->
         <section id="dashboard" class="view-section active">
-            <div class="section-header">
-                <h1>לוח בקרה פיננסי לשנת 2026</h1>
-            </div>
-
             <div class="metrics-grid">
                 <div class="metric-card">
-                    <h3>סך הכנסות (קבלות)</h3>
+                    <h3>סך הכנסות (2026)</h3>
                     <div class="value" id="total-income">₪0</div>
-                    <small>מחזור עסקאות מצטבר</small>
-                </div>
-                <div class="metric-card">
-                    <h3>תקרת עוסק פטור (2026)</h3>
-                    <div class="value" id="remaining-limit">₪120,000</div>
-                    <div class="progress-container">
-                        <div class="progress-bar" id="limit-progress"></div>
-                    </div>
-                    <small id="limit-percent" style="margin-top: 4px; display: block;">0% נוצל מהתקרה</small>
                 </div>
                 <div class="metric-card">
                     <h3>סך הוצאות מוכרות</h3>
                     <div class="value" id="total-expenses" style="color: var(--danger);">₪0</div>
-                    <small>חומרים, דלק, ציוד ועוד</small>
                 </div>
                 <div class="metric-card">
                     <h3>רווח נקי לצורכי מס</h3>
                     <div class="value" id="net-profit" style="color: var(--primary);">₪0</div>
-                    <small>הכנסות פחות הוצאות מוכרות</small>
+                </div>
+                <div class="metric-card">
+                    <h3>יתרה עד תקרת עוסק פטור</h3>
+                    <div class="value" id="remaining-limit">₪120,000</div>
                 </div>
             </div>
-
             <div class="card">
-                <h3>פעולות מהירות</h3>
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button class="btn" onclick="switchTab('add-doc')">הוסף מסמך חדש</button>
-                    <button class="btn btn-outline" onclick="exportToCSV()">ייצוא נתונים לאקסל (CSV)</button>
-                </div>
+                <h3>סטטוס סנכרון</h3>
+                <p id="sync-status" style="color: var(--text-secondary); margin-top: 6px;">המערכת עובדת במצב מקומי. הגדר כתובת Web App לסנכרון ענן מלא.</p>
             </div>
         </section>
 
-        <!-- מסך העלאת / הוספת מסמך -->
+        <!-- העלאת מסמך ושמירה בענן -->
         <section id="add-doc" class="view-section">
-            <div class="section-header">
-                <h1>העלאת ותיעוד מסמך</h1>
-            </div>
             <div class="card">
-                <form id="doc-form" onsubmit="saveDocument(event)">
+                <h2>תיעוד מסמך / הוצאה / הכנסה</h2>
+                <form id="doc-form" onsubmit="handleDocSubmit(event)">
                     <div class="form-grid">
                         <div class="form-group">
                             <label>סוג מסמך</label>
-                            <select id="doc-type" required onchange="updateCategories()">
-                                <option value="income">הכנסה (קבלה על תשלום)</option>
-                                <option value="expense">הוצאה מוכרת (חשבונית מס)</option>
+                            <select id="doc-type" onchange="updateCategories()">
+                                <option value="income">הכנסה (קבלה)</option>
+                                <option value="expense">הוצאה מוכרת (חשבונית)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -338,96 +132,152 @@
                             <input type="date" id="doc-date" required>
                         </div>
                         <div class="form-group">
-                            <label>סכום בש"ח</label>
-                            <input type="number" id="doc-amount" step="0.01" min="0" placeholder="0.00" required>
+                            <label>סכום (₪)</label>
+                            <input type="number" id="doc-amount" step="0.01" min="0" required>
                         </div>
                         <div class="form-group">
-                            <label>שם לקוח / ספק</label>
-                            <input type="text" id="doc-entity" placeholder="שם הלקוח או שם בית העסק" required>
+                            <label>לקוח / ספק</label>
+                            <input type="text" id="doc-entity" required>
                         </div>
                         <div class="form-group">
                             <label>קטגוריה</label>
-                            <select id="doc-category" required></select>
+                            <select id="doc-category"></select>
                         </div>
                         <div class="form-group">
-                            <label>תיאור העבודה / מוצר</label>
-                            <input type="text" id="doc-desc" placeholder="התקנת שקע כוח, רכישת חומרים...">
+                            <label>תיאור</label>
+                            <input type="text" id="doc-desc">
+                        </div>
+                        <div class="form-group">
+                            <label>צילום/קובץ מסמך (Google Drive)</label>
+                            <input type="file" id="doc-file" accept="image/*,application/pdf">
                         </div>
                     </div>
-                    <button type="submit" class="btn">שמור מסמך למערכת</button>
+                    <button type="submit" class="btn" id="save-btn">שמור וסנכרן</button>
                 </form>
             </div>
         </section>
 
-        <!-- מסך רשימת מסמכים -->
-        <section id="docs-list" class="view-section">
-            <div class="section-header">
-                <h1>רשימת מסמכים ותנועות</h1>
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>תאריך</th>
-                            <th>סוג</th>
-                            <th>לקוח / ספק</th>
-                            <th>קטגוריה</th>
-                            <th>תיאור</th>
-                            <th>סכום</th>
-                            <th>פעולה</th>
-                        </tr>
-                    </thead>
-                    <tbody id="docs-table-body">
-                        <!-- יוזן דינמית -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- מסך דו"ח רווח והפסד -->
-        <section id="pnl" class="view-section">
-            <div class="section-header">
-                <h1>דו"ח רווח והפסד לשנת המס</h1>
-            </div>
+        <!-- הפקת הצעת מחיר / קבלה ב-PDF -->
+        <section id="generate-pdf" class="view-section">
             <div class="card">
-                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border);">
-                    <strong>סך כל מחזור העסקאות (הכנסות):</strong>
-                    <span id="pnl-income">₪0</span>
+                <h2>יצירת הצעת מחיר / קבלה</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>סוג מסמך</label>
+                        <select id="pdf-doc-type">
+                            <option value="הצעת מחיר">הצעת מחיר</option>
+                            <option value="קבלה לעוסק פטור">קבלה</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>מספר מסמך</label>
+                        <input type="text" id="pdf-number" value="1001">
+                    </div>
+                    <div class="form-group">
+                        <label>שם הלקוח</label>
+                        <input type="text" id="pdf-client-name" placeholder="שם הלקוח">
+                    </div>
+                    <div class="form-group">
+                        <label>טלפון / כתובת לקוח</label>
+                        <input type="text" id="pdf-client-details" placeholder="עיר / כתובת">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>פירוט העבודה והחומרים</label>
+                        <textarea id="pdf-work-desc" rows="3" placeholder="התקנת לוח חשמל תלת-פאזי, חיבור הארקה..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>סכום סופי לתשלום (₪)</label>
+                        <input type="number" id="pdf-total-amount" placeholder="0.00">
+                    </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); color: var(--danger);">
-                    <strong>סך כל ההוצאות המוכרות:</strong>
-                    <span id="pnl-expenses">₪0</span>
+                <button class="btn" onclick="exportPDF()">הורד מסמך PDF ללקוח</button>
+            </div>
+
+            <!-- תבנית נסתרת המשמשת ליצירת ה-PDF -->
+            <div id="invoice-preview-container">
+                <div id="invoice-render" class="invoice-box">
+                    <div class="invoice-header">
+                        <div>
+                            <h2 id="out-type" style="color: var(--primary);">הצעת מחיר</h2>
+                            <p>מספר מסמך: <span id="out-number"></span></p>
+                            <p>תאריך: <span id="out-date"></span></p>
+                        </div>
+                        <div style="text-align: left;">
+                            <h3 id="out-biz-name">עוסק פטור</h3>
+                            <p id="out-biz-sub">שירותי חשמל ואחזקה</p>
+                            <p id="out-biz-id">ע.פ / ת.ז: </p>
+                        </div>
+                    </div>
+                    <div class="invoice-details">
+                        <p><strong>לכבוד:</strong> <span id="out-client-name"></span></p>
+                        <p><strong>פרטים נוספים:</strong> <span id="out-client-details"></span></p>
+                    </div>
+                    <table class="invoice-table">
+                        <thead>
+                            <tr>
+                                <th>פירוט השירות / העבודה</th>
+                                <th style="width: 120px;">סכום</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td id="out-desc-body"></td>
+                                <td id="out-price-body" style="font-weight: bold;"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="invoice-total">
+                        סך הכל לתשלום: <span id="out-total-final"></span> ₪
+                    </div>
+                    <div style="margin-top: 30px; font-size: 0.8rem; color: #666; border-top: 1px solid #eee; padding-top: 10px;">
+                        * מסמך זה מופק במסגרת עוסק פטור ואינו כולל חיוב מע"מ על פי סעיף 31(3) לחוק מע"מ.
+                    </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; padding: 16px 0; font-size: 1.2rem; font-weight: bold;">
-                    <strong>רווח נקי מעסק עצמאי:</strong>
-                    <span id="pnl-net">₪0</span>
-                </div>
-                <small style="color: var(--text-secondary);">* לצורך חישוב המס השנתי, רווח נקי זה יתווסף להכנסותיך מטופס ה-106 של שנת 2026.</small>
             </div>
         </section>
 
-        <!-- מסך מחירון שירותים -->
-        <section id="pricing" class="view-section">
-            <div class="section-header">
-                <h1>מחירון שירותים מהיר</h1>
+        <!-- רשימת מסמכים -->
+        <section id="docs-list" class="view-section">
+            <div class="card">
+                <h2>מסמכים ותנועות שנקלטו</h2>
+                <div style="overflow-x: auto; margin-top: 12px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>תאריך</th>
+                                <th>סוג</th>
+                                <th>לקוח / ספק</th>
+                                <th>קטגוריה</th>
+                                <th>תיאור</th>
+                                <th>סכום</th>
+                                <th>קובץ Drive</th>
+                            </tr>
+                        </thead>
+                        <tbody id="docs-table-body"></tbody>
+                    </table>
+                </div>
             </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>שם השירות / עבודה</th>
-                            <th>מחיר מומלץ (ש"ח)</th>
-                            <th>הערות</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>ביקור / בדיקת תשתית ראשונית</td><td>250 - 350</td><td>מתקזז בביצוע העבודה</td></tr>
-                        <tr><td>החלפת לוח חשמל ביתי (חד-פאזי)</td><td>1,500 - 2,500</td><td>כולל מאמ"תים וממסר פחת תקני</td></tr>
-                        <tr><td>התקנת עמדת טעינה לרכב חשמלי</td><td>1,200 - 2,200</td><td>תלוי במרחק מהלוח ובתשתית</td></tr>
-                        <tr><td>הוספת נקודת מאור / שקע כוח</td><td>300 - 450</td><td>כולל חיווט וחציבה בסיסית</td></tr>
-                        <tr><td>החלפת גוף חימום ותרמוסטט בדוד</td><td>450 - 650</td><td>כולל פלאנג' וניקוי אבנית</td></tr>
-                    </tbody>
-                </table>
+        </section>
+
+        <!-- הגדרות סנכרון ענן ופרטי עסק -->
+        <section id="settings" class="view-section">
+            <div class="card">
+                <h2>הגדרות ענן ופרטי עסק</h2>
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>כתובת Google Apps Script Web App (לסנכרון Sheets ו-Drive):</label>
+                        <input type="url" id="script-url" placeholder="https://script.google.com/macros/s/.../exec">
+                    </div>
+                    <div class="form-group">
+                        <label>שם העסק שיופיע ב-PDF:</label>
+                        <input type="text" id="setting-biz-name" value="שירותי חשמל ואחזקה">
+                    </div>
+                    <div class="form-group">
+                        <label>מספר עוסק פטור (ת.ז):</label>
+                        <input type="text" id="setting-biz-id" placeholder="תעודת זהות / מספר ע.פ">
+                    </div>
+                </div>
+                <button class="btn" onclick="saveSettings()">שמור הגדרות</button>
             </div>
         </section>
 
@@ -436,23 +286,33 @@
     <script>
         const ANNUAL_LIMIT = 120000;
         let documents = JSON.parse(localStorage.getItem('biz_docs') || '[]');
+        let appSettings = JSON.parse(localStorage.getItem('biz_settings') || '{}');
 
         const categories = {
             income: ['עבודות חשמל', 'עבודות אחזקה והנדימן', 'ייעוץ ובדיקות', 'אחר'],
             expense: ['ציוד וחומרי חשמל', 'כלי עבודה', 'רכב ודלק', 'ביטוחים ורישיונות', 'שיווק ופרסום', 'טלפון ותקשורת', 'שונות']
         };
 
+        function initApp() {
+            document.getElementById('doc-date').value = new Date().toISOString().split('T')[0];
+            if (appSettings.scriptUrl) document.getElementById('script-url').value = appSettings.scriptUrl;
+            if (appSettings.bizName) document.getElementById('setting-biz-name').value = appSettings.bizName;
+            if (appSettings.bizId) document.getElementById('setting-biz-id').value = appSettings.bizId;
+            updateSyncStatus();
+            updateCategories();
+            renderMetrics();
+        }
+
         function switchTab(tabId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            
             document.getElementById(tabId).classList.add('active');
-            const navIndex = ['dashboard', 'add-doc', 'docs-list', 'pnl', 'pricing'].indexOf(tabId);
-            if (navIndex !== -1) {
-                document.querySelectorAll('.nav-item')[navIndex].classList.add('active');
-            }
+            
+            const tabs = ['dashboard', 'add-doc', 'generate-pdf', 'docs-list', 'settings'];
+            const idx = tabs.indexOf(tabId);
+            if (idx !== -1) document.querySelectorAll('.nav-item')[idx].classList.add('active');
 
-            if (tabId === 'dashboard' || tabId === 'pnl') renderMetrics();
+            if (tabId === 'dashboard') renderMetrics();
             if (tabId === 'docs-list') renderDocsTable();
         }
 
@@ -462,110 +322,179 @@
             catSelect.innerHTML = categories[type].map(c => `<option value="${c}">${c}</option>`).join('');
         }
 
-        function saveDocument(e) {
+        function updateSyncStatus() {
+            const statusEl = document.getElementById('sync-status');
+            if (appSettings.scriptUrl) {
+                statusEl.textContent = 'מחובר לסנכרון ענן (Google Sheets & Drive פעילים)';
+                statusEl.style.color = 'var(--primary)';
+            } else {
+                statusEl.textContent = 'המערכת עובדת במצב מקומי. הגדר כתובת Web App בסעיף הגדרות לסנכרון ענן.';
+                statusEl.style.color = 'var(--text-secondary)';
+            }
+        }
+
+        function saveSettings() {
+            appSettings.scriptUrl = document.getElementById('script-url').value.trim();
+            appSettings.bizName = document.getElementById('setting-biz-name').value.trim();
+            appSettings.bizId = document.getElementById('setting-biz-id').value.trim();
+            localStorage.setItem('biz_settings', JSON.stringify(appSettings));
+            updateSyncStatus();
+            alert('הגדרות נשמרו בהצלחה');
+        }
+
+        async function handleDocSubmit(e) {
             e.preventDefault();
-            const doc = {
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'שומר ומעלה...';
+
+            const fileInput = document.getElementById('doc-file');
+            let fileData = { base64: null, name: null, type: null };
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                fileData.name = file.name;
+                fileData.type = file.type;
+                fileData.base64 = await readFileAsBase64(file);
+            }
+
+            const newDoc = {
                 id: Date.now(),
                 type: document.getElementById('doc-type').value,
                 date: document.getElementById('doc-date').value,
                 amount: parseFloat(document.getElementById('doc-amount').value),
                 entity: document.getElementById('doc-entity').value,
                 category: document.getElementById('doc-category').value,
-                desc: document.getElementById('doc-desc').value
+                desc: document.getElementById('doc-desc').value,
+                driveUrl: ""
             };
 
-            documents.push(doc);
+            // שמירה מקומית מיידית
+            documents.push(newDoc);
             localStorage.setItem('biz_docs', JSON.stringify(documents));
-            alert('המסמך נשמר בהצלחה!');
+
+            // סנכרון ל-Google Apps Script במידה ומוגדר
+            if (appSettings.scriptUrl) {
+                try {
+                    const payload = {
+                        date: newDoc.date,
+                        type: newDoc.type,
+                        amount: newDoc.amount,
+                        entity: newDoc.entity,
+                        category: newDoc.category,
+                        desc: newDoc.desc,
+                        fileName: fileData.name,
+                        fileType: fileData.type,
+                        fileBase64: fileData.base64
+                    };
+
+                    const response = await fetch(appSettings.scriptUrl, {
+                        method: 'POST',
+                        mode: 'no-cors', // שידור חלק ל-Apps Script
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    alert('המסמך נשמר מקומית ונשלח לסנכרון ב-Sheets וב-Drive!');
+                } catch (err) {
+                    alert('נשמר מקומית בדפדפן, אך אירעה שגיאה בסנכרון לענן.');
+                }
+            } else {
+                alert('המסמך נשמר במאגר המקומי בדפדפן.');
+            }
+
             document.getElementById('doc-form').reset();
-            setDefaultDate();
-            updateCategories();
+            initApp();
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'שמור וסנכרן';
             switchTab('dashboard');
         }
 
-        function deleteDoc(id) {
-            if (confirm('למחוק מסמך זה?')) {
-                documents = documents.filter(d => d.id !== id);
-                localStorage.setItem('biz_docs', JSON.stringify(documents));
-                renderDocsTable();
-                renderMetrics();
-            }
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
         }
 
         function renderMetrics() {
             const income = documents.filter(d => d.type === 'income').reduce((acc, d) => acc + d.amount, 0);
             const expenses = documents.filter(d => d.type === 'expense').reduce((acc, d) => acc + d.amount, 0);
-            const net = income - expenses;
-            const remaining = Math.max(0, ANNUAL_LIMIT - income);
-            const percent = Math.min(100, Math.round((income / ANNUAL_LIMIT) * 100));
-
             document.getElementById('total-income').textContent = '₪' + income.toLocaleString();
             document.getElementById('total-expenses').textContent = '₪' + expenses.toLocaleString();
-            document.getElementById('net-profit').textContent = '₪' + net.toLocaleString();
-            document.getElementById('remaining-limit').textContent = '₪' + remaining.toLocaleString();
-            document.getElementById('limit-progress').style.width = percent + '%';
-            document.getElementById('limit-percent').textContent = percent + '% נוצל מהתקרה';
-
-            document.getElementById('pnl-income').textContent = '₪' + income.toLocaleString();
-            document.getElementById('pnl-expenses').textContent = '₪' + expenses.toLocaleString();
-            document.getElementById('pnl-net').textContent = '₪' + net.toLocaleString();
+            document.getElementById('net-profit').textContent = '₪' + (income - expenses).toLocaleString();
+            document.getElementById('remaining-limit').textContent = '₪' + Math.max(0, ANNUAL_LIMIT - income).toLocaleString();
         }
 
         function renderDocsTable() {
             const tbody = document.getElementById('docs-table-body');
             tbody.innerHTML = '';
-            
-            // מיון לפי תאריך יורד
             const sorted = [...documents].sort((a,b) => new Date(b.date) - new Date(a.date));
 
             if (sorted.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">אין מסמכים מתועדים עדיין.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">אין תנועות במערכת.</td></tr>';
                 return;
             }
 
             sorted.forEach(d => {
                 const tr = document.createElement('tr');
-                const isIncome = d.type === 'income';
                 tr.innerHTML = `
                     <td>${d.date}</td>
-                    <td><span class="badge ${isIncome ? 'badge-income' : 'badge-expense'}">${isIncome ? 'קבלה' : 'חשבונית הוצאה'}</span></td>
+                    <td>${d.type === 'income' ? 'הכנסה' : 'הוצאה'}</td>
                     <td>${d.entity}</td>
                     <td>${d.category}</td>
                     <td>${d.desc || '-'}</td>
-                    <td style="font-weight: 600; color: ${isIncome ? 'var(--primary)' : 'var(--danger)'}">₪${d.amount.toLocaleString()}</td>
-                    <td><button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="deleteDoc(${d.id})">מחק</button></td>
+                    <td style="font-weight:bold;">₪${d.amount.toLocaleString()}</td>
+                    <td>${d.driveUrl ? `<a href="${d.driveUrl}" target="_blank">פתח</a>` : 'בסנכרון'}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function exportToCSV() {
-            if (documents.length === 0) {
-                alert('אין נתונים לייצוא');
+        function exportPDF() {
+            const type = document.getElementById('pdf-doc-type').value;
+            const number = document.getElementById('pdf-number').value;
+            const clientName = document.getElementById('pdf-client-name').value;
+            const clientDetails = document.getElementById('pdf-client-details').value;
+            const desc = document.getElementById('pdf-work-desc').value;
+            const total = document.getElementById('pdf-total-amount').value;
+
+            if (!clientName || !total) {
+                alert('נא למלא שם לקוח וסכום');
                 return;
             }
-            let csvContent = "\uFEFFתאריך,סוג,לקוח/ספק,קטגוריה,תיאור,סכום\n";
-            documents.forEach(d => {
-                const typeName = d.type === 'income' ? 'הכנסה' : 'הוצאה';
-                csvContent += `"${d.date}","${typeName}","${d.entity}","${d.category}","${d.desc || ''}","${d.amount}"\n`;
+
+            document.getElementById('out-type').textContent = type;
+            document.getElementById('out-number').textContent = number;
+            document.getElementById('out-date').textContent = new Date().toLocaleDateString('he-IL');
+            document.getElementById('out-biz-name').textContent = appSettings.bizName || 'עוסק פטור';
+            document.getElementById('out-biz-id').textContent = 'ע.פ / ח.פ: ' + (appSettings.bizId || '-');
+            document.getElementById('out-client-name').textContent = clientName;
+            document.getElementById('out-client-details').textContent = clientDetails;
+            document.getElementById('out-desc-body').textContent = desc || 'מתן שירות';
+            document.getElementById('out-price-body').textContent = '₪' + parseFloat(total).toLocaleString();
+            document.getElementById('out-total-final').textContent = parseFloat(total).toLocaleString();
+
+            const element = document.getElementById('invoice-render');
+            const container = document.getElementById('invoice-preview-container');
+            container.style.display = 'block';
+
+            const opt = {
+                margin:       10,
+                filename:     `${type}_${number}_${clientName}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                container.style.display = 'none';
             });
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `דוח_עוסק_פטור_2026.csv`;
-            a.click();
         }
 
-        function setDefaultDate() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('doc-date').value = today;
-        }
-
-        // אתחול
-        setDefaultDate();
-        updateCategories();
-        renderMetrics();
+        initApp();
     </script>
 </body>
 </html>
